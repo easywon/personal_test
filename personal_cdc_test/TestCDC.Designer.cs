@@ -33,6 +33,7 @@
             this.mainLayoutTable = new System.Windows.Forms.TableLayoutPanel();
             this.buttonTableLayout = new System.Windows.Forms.TableLayoutPanel();
             this.connectToServer = new System.Windows.Forms.Button();
+            this.testConnection = new System.Windows.Forms.Button();
             this.mainLayoutTable.SuspendLayout();
             this.buttonTableLayout.SuspendLayout();
             this.SuspendLayout();
@@ -70,6 +71,7 @@
             this.buttonTableLayout.ColumnCount = 1;
             this.buttonTableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.buttonTableLayout.Controls.Add(this.connectToServer, 0, 0);
+            this.buttonTableLayout.Controls.Add(this.testConnection, 0, 1);
             this.buttonTableLayout.Dock = System.Windows.Forms.DockStyle.Fill;
             this.buttonTableLayout.Location = new System.Drawing.Point(264, 93);
             this.buttonTableLayout.Name = "buttonTableLayout";
@@ -92,6 +94,19 @@
             this.connectToServer.TabIndex = 0;
             this.connectToServer.Text = "Connect to server";
             this.connectToServer.UseVisualStyleBackColor = true;
+            this.connectToServer.Click += new System.EventHandler(this.ConnectToServer_Click);
+            // 
+            // testConnection
+            // 
+            this.testConnection.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.testConnection.Location = new System.Drawing.Point(35, 128);
+            this.testConnection.Margin = new System.Windows.Forms.Padding(35);
+            this.testConnection.Name = "testConnection";
+            this.testConnection.Size = new System.Drawing.Size(185, 23);
+            this.testConnection.TabIndex = 2;
+            this.testConnection.Text = "Test Connection";
+            this.testConnection.UseVisualStyleBackColor = true;
+            this.testConnection.Click += new System.EventHandler(this.TestConnection_Click);
             // 
             // TestCDC
             // 
@@ -112,6 +127,7 @@
         private System.Windows.Forms.TableLayoutPanel mainLayoutTable;
         private System.Windows.Forms.TableLayoutPanel buttonTableLayout;
         private System.Windows.Forms.Button connectToServer;
+        private System.Windows.Forms.Button testConnection;
     }
 }
 

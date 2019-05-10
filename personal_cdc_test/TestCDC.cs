@@ -10,6 +10,7 @@ using System.Windows.Forms;
 
 using System.Data.Odbc;
 using Snowflake.Data.Client;
+using System.Data.SqlClient;
 
 namespace personal_cdc_test
 {
@@ -40,9 +41,85 @@ namespace personal_cdc_test
             
         }
 
-        private void ConnectToServer_Click(object sender, EventArgs e)
+        private void connectToSQL_Click(object sender, EventArgs e)
         {
-            // Attemp to establish connection to server
+            OdbcConnectionStringBuilder builder = new OdbcConnectionStringBuilder();
+            builder.Driver = "SQL Server";
+            builder.Add("Server", "cougar5");
+            builder.Add("Database", "SANDBOX_MODEL_PETER");
+            builder.Add("Trusted_Connection", "Yes");
+            
+            IDbConnection sqlConn = new OdbcConnection(builder.ConnectionString);
+
+            try
+            {
+                sqlConn.Open();
+                IDbCommand sqlCmd = sqlConn.CreateCommand();
+                sqlCmd.CommandText = "SELECT * FROM dbo.Source";
+                IDataReader reader = sqlCmd.ExecuteReader();
+
+
+                string result = "";
+                while (reader.Read())
+                {
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        result += reader.GetString(i) + " ";
+                    }
+                    result += "\n";
+                }
+
+                MessageBox.Show(result);
+
+                reader.Close();
+                sqlConn.Close();
+                mainMessage.Text = "SQL command Successful";
+            }
+            catch(SqlException sqle)
+            {
+                mainMessage.Text = sqle.ToString();
+            }
+        }
+
+        private void connectToSnow_Click(object sender, EventArgs e)
+        {
+            IDbConnection conn = new SnowflakeDbConnection();
+            conn.ConnectionString = connectInfo;
+
+            try
+            {
+                string result = "";
+
+                conn.Open();
+                IDbCommand cmd = conn.CreateCommand();
+                cmd.CommandText = "SELECT * FROM Landing.Product;";
+                IDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        result += reader.GetString(i) + " ";
+                    }
+                    result += "\n";
+                }
+
+                MessageBox.Show(result);
+
+                reader.Close();
+                conn.Close();
+                mainMessage.Text = "Test Successful";
+            }
+            catch (SnowflakeDbException sfe)
+            {
+                mainMessage.Text = sfe.ToString();
+            }
+        }
+    }
+}
+
+/*
+ *             // Attemp to establish connection to server
             IDbConnection conn = new SnowflakeDbConnection();
             conn.ConnectionString = connectInfo;
 
@@ -75,11 +152,4 @@ namespace personal_cdc_test
             {
                 mainMessage.Text = sfe.ToString();
             }
-        }
-
-        private void TestConnection_Click(object sender, EventArgs e)
-        {
-
-        }
-    }
-}
+*/

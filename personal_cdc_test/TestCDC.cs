@@ -10,11 +10,19 @@ using System.Windows.Forms;
 
 namespace personal_cdc_test
 {
-    public partial class Form1 : Form
+    public partial class TestCDC : Form
     {
-        public Form1()
+        
+        public TestCDC()
         {
             InitializeComponent();
+
+            mainMessage.Text = "Welcome!";
+        }
+
+        private void mainMessage_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

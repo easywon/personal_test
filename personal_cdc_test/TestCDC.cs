@@ -88,8 +88,6 @@ namespace personal_cdc_test
 
             try
             {
-                string result = "";
-
                 conn.Open();
                 IDbCommand landingCmd = conn.CreateCommand();
                 IDbCommand hdsCmd = conn.CreateCommand();
@@ -110,13 +108,10 @@ namespace personal_cdc_test
                     bool matchFound = false;
                     bool newEntry = false;
 
-                    // Determines if the SELECT statement returned any rows
-                    bool emptyRow = true;
+                    int replaceId = 0;
 
                     while (hdsRead.Read())
                     {
-                        emptyRow = false;
-
                         // Same primary key in landing and hds.
                         if(landingRead.GetInt32(0) == hdsRead.GetInt32(0))
                         {
@@ -130,23 +125,16 @@ namespace personal_cdc_test
                                 if(landingRead.GetString(i) != hdsRead.GetString(i))
                                 {
                                     newEntry = true;
+                                    replaceId = landingRead.GetInt32(0);
                                 }
                             }
                         }
-                        // Record in landing does not exist in hds. New entry required.
-                        else
-                        {
-                            newEntry = true;
-                        }
                     }
 
-                    // Empty result case. Called when HDS is brand new.
-                    if (emptyRow)
+                    if (!matchFound)
                     {
                         newEntry = true;
                     }
-
-                    
 
                     // No match. No entry. Default Error case
                     if (!matchFound && !newEntry)
@@ -159,8 +147,6 @@ namespace personal_cdc_test
                     else if(!matchFound && newEntry)
                     {
                         // Insert new record
-                        MessageBox.Show("01");
-
                         IDbCommand hdsInsert = conn.CreateCommand();
                         
                         hdsInsert.CommandText = "INSERT INTO Hds.Customer(Id, Name, Load_Datetime) VALUES (" +
@@ -180,8 +166,26 @@ namespace personal_cdc_test
                     // Matched. Requires a new entry. Update.
                     else if(matchFound && newEntry)
                     {
+                        MessageBox.Show("In Update");
+
                         // Update the old entry with delete reason and date.
+                        IDbCommand hdsUpdate = conn.CreateCommand();
+                        hdsUpdate.CommandText = "UPDATE Hds.Customer " +
+                                                "SET Delete_Datetime = CURRENT_DATE " +
+                                                "WHERE Id = " + replaceId + " AND Delete_Datetime IS NULL;";
+
+                        hdsUpdate.ExecuteReader();
+
                         // Insert new record.
+                        IDbCommand hdsInsert = conn.CreateCommand();
+
+                        hdsInsert.CommandText = "INSERT INTO Hds.Customer(Id, Name, Load_Datetime) VALUES (" +
+                                             landingRead.GetInt32(0) + ", '" +
+                                             landingRead.GetString(1) + "', '" +
+                                             landingRead.GetDateTime(2) + "');";
+
+                        MessageBox.Show(hdsInsert.CommandText);
+                        hdsInsert.ExecuteReader();
                     }
 
                     hdsRead.Close();

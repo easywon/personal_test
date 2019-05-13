@@ -95,11 +95,10 @@ namespace personal_cdc_test
                 IDbCommand hdsCmd = conn.CreateCommand();
 
                 landingCmd.CommandText = "SELECT * FROM Landing.Customer;";
-                hdsCmd.CommandText = "SELECT * FROM HDS.Customer WHERE Delete_Datetime = NULL;";
+                hdsCmd.CommandText = "SELECT * FROM HDS.Customer WHERE Delete_Datetime IS NULL;";
 
                 IDataReader landingRead = landingCmd.ExecuteReader();
-                
-
+               
 
                 // start by looking at each record of landing.
                 while (landingRead.Read())
@@ -111,8 +110,13 @@ namespace personal_cdc_test
                     bool matchFound = false;
                     bool newEntry = false;
 
+                    // Determines if the SELECT statement returned any rows
+                    bool emptyRow = true;
+
                     while (hdsRead.Read())
                     {
+                        emptyRow = false;
+
                         // Same primary key in landing and hds.
                         if(landingRead.GetInt32(0) == hdsRead.GetInt32(0))
                         {
@@ -136,30 +140,57 @@ namespace personal_cdc_test
                         }
                     }
 
+                    // Empty result case. Called when HDS is brand new.
+                    if (emptyRow)
+                    {
+                        newEntry = true;
+                    }
+
+                    
+
+                    // No match. No entry. Default Error case
                     if (!matchFound && !newEntry)
                     {
+                        // Throw exception
+                        MessageBox.Show("00");
 
                     }
+                    // No match. Requires a new entry. 
                     else if(!matchFound && newEntry)
                     {
+                        // Insert new record
+                        MessageBox.Show("01");
 
+                        IDbCommand hdsInsert = conn.CreateCommand();
+                        
+                        hdsInsert.CommandText = "INSERT INTO Hds.Customer(Id, Name, Load_Datetime) VALUES (" +
+                                             landingRead.GetInt32(0) + ", '" +
+                                             landingRead.GetString(1) + "', '" +
+                                             landingRead.GetDateTime(2) + "');";
+
+                        MessageBox.Show(hdsInsert.CommandText);
+                        hdsInsert.ExecuteReader();
                     }
+                    // Matched. Same record. No need for update.
                     else if(matchFound && !newEntry)
                     {
-
+                        // Do nothing
+                        mainMessage.Text = "Duplicate Entry.";
                     }
+                    // Matched. Requires a new entry. Update.
                     else if(matchFound && newEntry)
                     {
-
+                        // Update the old entry with delete reason and date.
+                        // Insert new record.
                     }
+
+                    hdsRead.Close();
                 }
 
            
 
                 landingRead.Close();
-                hdsRead.Close();
                 conn.Close();
-                mainMessage.Text = "Test Successful";
             }
             catch (SnowflakeDbException sfe)
             {

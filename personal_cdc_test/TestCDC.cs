@@ -21,12 +21,12 @@ namespace personal_cdc_test
         //pass: Sage.4242
         //wh: COMPUTE_WH
 
-        string connectInfo = "ACCOUNT=zs31584;" +
-                             "HOST=zs31584.east-us-2.azure.snowflakecomputing.com;" +
-                             "USER=CraigWeiss;" +
-                             "PASSWORD=Sage.4242;" +
-                             "WAREHOUSE=COMPUTE_WH;" +
-                             "DB=SANDBOX_MODEL_PETER;";
+        string snowConnectInfo = "ACCOUNT=zs31584;" +
+                                 "HOST=zs31584.east-us-2.azure.snowflakecomputing.com;" +
+                                 "USER=CraigWeiss;" +
+                                 "PASSWORD=Sage.4242;" +
+                                 "WAREHOUSE=COMPUTE_WH;" +
+                                 "DB=SANDBOX_MODEL_PETER;";
 
 
         public TestCDC()
@@ -84,29 +84,80 @@ namespace personal_cdc_test
         private void connectToSnow_Click(object sender, EventArgs e)
         {
             IDbConnection conn = new SnowflakeDbConnection();
-            conn.ConnectionString = connectInfo;
+            conn.ConnectionString = snowConnectInfo;
 
             try
             {
                 string result = "";
 
                 conn.Open();
-                IDbCommand cmd = conn.CreateCommand();
-                cmd.CommandText = "SELECT * FROM Landing.Product;";
-                IDataReader reader = cmd.ExecuteReader();
+                IDbCommand landingCmd = conn.CreateCommand();
+                IDbCommand hdsCmd = conn.CreateCommand();
 
-                while (reader.Read())
+                landingCmd.CommandText = "SELECT * FROM Landing.Customer;";
+                hdsCmd.CommandText = "SELECT * FROM HDS.Customer WHERE Delete_Datetime = NULL;";
+
+                IDataReader landingRead = landingCmd.ExecuteReader();
+                
+
+
+                // start by looking at each record of landing.
+                while (landingRead.Read())
                 {
-                    for (int i = 0; i < reader.FieldCount; i++)
+                    // Compare the primary key against each entry in hds.
+                    IDataReader hdsRead = hdsCmd.ExecuteReader();
+
+                    // tracks whether an entry already exists or if current record is brand new
+                    bool matchFound = false;
+                    bool newEntry = false;
+
+                    while (hdsRead.Read())
                     {
-                        result += reader.GetString(i) + " ";
+                        // Same primary key in landing and hds.
+                        if(landingRead.GetInt32(0) == hdsRead.GetInt32(0))
+                        {
+                            // Match indicates that the record has been inserted into HDS before.
+                            matchFound = true;
+
+                            // Checks all field values except for first and last (id and land_time)
+                            for (int i = 1; i < landingRead.FieldCount - 1; i++)
+                            {
+                                // *future implemenation* Use reader.GetFieldType() and use switch cases
+                                if(landingRead.GetString(i) != hdsRead.GetString(i))
+                                {
+                                    newEntry = true;
+                                }
+                            }
+                        }
+                        // Record in landing does not exist in hds. New entry required.
+                        else
+                        {
+                            newEntry = true;
+                        }
                     }
-                    result += "\n";
+
+                    if (!matchFound && !newEntry)
+                    {
+
+                    }
+                    else if(!matchFound && newEntry)
+                    {
+
+                    }
+                    else if(matchFound && !newEntry)
+                    {
+
+                    }
+                    else if(matchFound && newEntry)
+                    {
+
+                    }
                 }
 
-                MessageBox.Show(result);
+           
 
-                reader.Close();
+                landingRead.Close();
+                hdsRead.Close();
                 conn.Close();
                 mainMessage.Text = "Test Successful";
             }

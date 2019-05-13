@@ -210,9 +210,9 @@ namespace personal_cdc_test
 
             // CDC function object
             var op = new CdcSQL();
-            List<int> addList = op.getHdsAdd(snowConn, "Customer");
+            op.HdsAdd(snowConn, "Customer");
 
-            MessageBox.Show(string.Join(", ", addList));
+            MessageBox.Show("Added new items to the HDS");
         }
 
         private void ButtonTableLayout_Paint(object sender, PaintEventArgs e)

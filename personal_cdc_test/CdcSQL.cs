@@ -61,16 +61,21 @@ namespace personal_cdc_test
             return result;
         }
 
-        public List<int> getHdsAdd(IDbConnection c, string tableName)
+        public void HdsAdd(IDbConnection c, string tableName)
         {
-            List<int> result = new List<int>();
             try
             {
                 c.Open();
                 IDbCommand getAddList = c.CreateCommand();
 
-                // Select all active ids in Landing that are not present in HDS.
-                getAddList.CommandText = "SELECT l.Id " +
+                List<string> columnName = GetColumnName(c, tableName);
+                int width = columnName.Count();
+
+                // Add all active ids in Landing that are not present in HDS to HDS.
+                getAddList.CommandText = "INSERT INTO HDS.Customer (Id, Name, Load_DateTime)" +
+                                         "INSERT INTO HDS." + tableName + 
+                                         " (" + columnName[0] + ", Name, Load_DateTime)" +
+                                         "SELECT Id, Name, Load_Datetime " +
                                          "FROM Landing." + tableName + " l " +
                                          "WHERE l.Id NOT IN " +
                                          "(" +
@@ -78,22 +83,44 @@ namespace personal_cdc_test
                                          "FROM Hds." + tableName + " h " +
                                          "WHERE h.Delete_Reason IS NULL);";
 
-                IDataReader addReader = getAddList.ExecuteReader();
-
-                // Adds the result of the query into the return result
-                while (addReader.Read())
-                {
-                    result.Add(addReader.GetInt32(0));
-                }
-
+                getAddList.ExecuteReader();
                 c.Close();
             }
             catch (SnowflakeDbException sfe)
             {
                 MessageBox.Show(sfe.ToString());
             }
+        }
 
-            return result;
+        public List<string> GetColumnName(IDbConnection c, string tableName)
+        {
+            List<string> columnName = new List<string>();
+
+            try
+            {
+                c.Open();
+
+                IDbCommand getColumns = c.CreateCommand();
+
+                // Snowflake sql query to retrieve column names
+                getColumns.CommandText = "SHOW COLUMNS " +
+                                         "IN TABLE Landing." + tableName;
+
+                // Parse the result to return only the column names.
+                // Snowflake defaults the third index [2] to column name.
+                IDataReader reader = getColumns.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    columnName.Add(reader.GetString(2));
+                }
+            }
+            catch (SnowflakeDbException sfe)
+            {
+                MessageBox.Show(sfe.ToString());
+            }
+
+            return columnName;
         }
     }
 }

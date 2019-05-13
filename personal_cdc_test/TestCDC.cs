@@ -171,7 +171,7 @@ namespace personal_cdc_test
                         // Update the old entry with delete reason and date.
                         IDbCommand hdsUpdate = conn.CreateCommand();
                         hdsUpdate.CommandText = "UPDATE Hds.Customer " +
-                                                "SET Delete_Datetime = CURRENT_DATE " +
+                                                "SET Delete_Reason = 2, Delete_Datetime = CURRENT_DATE " +
                                                 "WHERE Id = " + replaceId + " AND Delete_Datetime IS NULL;";
 
                         hdsUpdate.ExecuteReader();

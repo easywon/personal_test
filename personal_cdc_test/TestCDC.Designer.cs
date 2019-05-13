@@ -32,8 +32,10 @@
             this.mainMessage = new System.Windows.Forms.Label();
             this.mainLayoutTable = new System.Windows.Forms.TableLayoutPanel();
             this.buttonTableLayout = new System.Windows.Forms.TableLayoutPanel();
+            this.deleteHDSButton = new System.Windows.Forms.Button();
             this.connectToSQL = new System.Windows.Forms.Button();
             this.connectToSnow = new System.Windows.Forms.Button();
+            this.addHDSButton = new System.Windows.Forms.Button();
             this.mainLayoutTable.SuspendLayout();
             this.buttonTableLayout.SuspendLayout();
             this.SuspendLayout();
@@ -47,7 +49,6 @@
             this.mainMessage.TabIndex = 1;
             this.mainMessage.Text = "MainMessage";
             this.mainMessage.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.mainMessage.Click += new System.EventHandler(this.mainMessage_Click);
             // 
             // mainLayoutTable
             // 
@@ -70,8 +71,10 @@
             // 
             this.buttonTableLayout.ColumnCount = 1;
             this.buttonTableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.buttonTableLayout.Controls.Add(this.connectToSQL, 0, 0);
-            this.buttonTableLayout.Controls.Add(this.connectToSnow, 0, 1);
+            this.buttonTableLayout.Controls.Add(this.addHDSButton, 0, 1);
+            this.buttonTableLayout.Controls.Add(this.deleteHDSButton, 0, 0);
+            this.buttonTableLayout.Controls.Add(this.connectToSQL, 0, 4);
+            this.buttonTableLayout.Controls.Add(this.connectToSnow, 0, 3);
             this.buttonTableLayout.Dock = System.Windows.Forms.DockStyle.Fill;
             this.buttonTableLayout.Location = new System.Drawing.Point(264, 93);
             this.buttonTableLayout.Name = "buttonTableLayout";
@@ -81,13 +84,27 @@
             this.buttonTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.buttonTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.buttonTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
+            this.buttonTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.buttonTableLayout.Size = new System.Drawing.Size(255, 465);
             this.buttonTableLayout.TabIndex = 2;
+            this.buttonTableLayout.Paint += new System.Windows.Forms.PaintEventHandler(this.ButtonTableLayout_Paint);
+            // 
+            // deleteHDSButton
+            // 
+            this.deleteHDSButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.deleteHDSButton.Location = new System.Drawing.Point(35, 35);
+            this.deleteHDSButton.Margin = new System.Windows.Forms.Padding(35);
+            this.deleteHDSButton.Name = "deleteHDSButton";
+            this.deleteHDSButton.Size = new System.Drawing.Size(185, 23);
+            this.deleteHDSButton.TabIndex = 3;
+            this.deleteHDSButton.Text = "Delete from HDS";
+            this.deleteHDSButton.UseVisualStyleBackColor = true;
+            this.deleteHDSButton.Click += new System.EventHandler(this.DeleteHDSButton_Click);
             // 
             // connectToSQL
             // 
             this.connectToSQL.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.connectToSQL.Location = new System.Drawing.Point(35, 35);
+            this.connectToSQL.Location = new System.Drawing.Point(35, 407);
             this.connectToSQL.Margin = new System.Windows.Forms.Padding(35);
             this.connectToSQL.Name = "connectToSQL";
             this.connectToSQL.Size = new System.Drawing.Size(185, 23);
@@ -98,8 +115,7 @@
             // 
             // connectToSnow
             // 
-            this.connectToSnow.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.connectToSnow.Location = new System.Drawing.Point(35, 128);
+            this.connectToSnow.Location = new System.Drawing.Point(35, 314);
             this.connectToSnow.Margin = new System.Windows.Forms.Padding(35);
             this.connectToSnow.Name = "connectToSnow";
             this.connectToSnow.Size = new System.Drawing.Size(185, 23);
@@ -107,6 +123,18 @@
             this.connectToSnow.Text = "Connect to Snowflake";
             this.connectToSnow.UseVisualStyleBackColor = true;
             this.connectToSnow.Click += new System.EventHandler(this.connectToSnow_Click);
+            // 
+            // addHDSButton
+            // 
+            this.addHDSButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.addHDSButton.Location = new System.Drawing.Point(35, 128);
+            this.addHDSButton.Margin = new System.Windows.Forms.Padding(35);
+            this.addHDSButton.Name = "addHDSButton";
+            this.addHDSButton.Size = new System.Drawing.Size(185, 23);
+            this.addHDSButton.TabIndex = 4;
+            this.addHDSButton.Text = "Add to HDS";
+            this.addHDSButton.UseVisualStyleBackColor = true;
+            this.addHDSButton.Click += new System.EventHandler(this.AddHDSButton_Click);
             // 
             // TestCDC
             // 
@@ -128,6 +156,8 @@
         private System.Windows.Forms.TableLayoutPanel buttonTableLayout;
         private System.Windows.Forms.Button connectToSQL;
         private System.Windows.Forms.Button connectToSnow;
+        private System.Windows.Forms.Button deleteHDSButton;
+        private System.Windows.Forms.Button addHDSButton;
     }
 }
 

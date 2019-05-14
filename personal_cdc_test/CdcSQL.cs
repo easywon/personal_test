@@ -162,6 +162,11 @@ namespace personal_cdc_test
             }
         }
 
+        /// <summary>
+        /// Truncates the landing table for next use.
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="tableName"></param>
         public void TruncateLanding(IDbConnection c, string tableName)
         {
             try

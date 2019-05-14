@@ -197,9 +197,9 @@ namespace personal_cdc_test
 
             // CDC function object
             var op = new CdcSQL();
-            List<int> deleteList = op.getHdsDelete(snowConn, "Customer");
+            op.HdsDelete(snowConn, "Customer");
 
-            MessageBox.Show(string.Join(", ", deleteList));
+            MessageBox.Show("Items in Hds deleted");
         }
 
         private void AddHDSButton_Click(object sender, EventArgs e)

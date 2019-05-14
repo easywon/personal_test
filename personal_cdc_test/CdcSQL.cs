@@ -70,7 +70,7 @@ namespace personal_cdc_test
         }
 
         /// <summary>
-        /// Deletes any active records in HDS which are not present in the new Landing data.
+        /// Soft deletes any active records in HDS which are not present in the new Landing data.
         /// </summary>
         /// <param name="c"></param>
         /// <param name="tableName"></param>
@@ -86,17 +86,14 @@ namespace personal_cdc_test
                 string primaryKey = columnName[0];
                 
 
-                // Delete all active ids in HDS that are not present in Landing.
-                getAddList.CommandText = "DELETE FROM Hds." + tableName + " " +
-                                         "WHERE " + primaryKey + " IN " +
+                // Update all active ids in HDS that are not present in Landing to soft delete.
+                getAddList.CommandText = "UPDATE Hds." + tableName + " " +
+                                         "SET Delete_Reason = 1, Delete_Datetime = CURRENT_DATE " +
+                                         "WHERE Delete_Reason IS NULL " +
+                                         "AND " + primaryKey + " NOT IN " +
                                          "(" +
-                                           "SELECT h." + primaryKey + " " +
-                                           "FROM Hds." + tableName + " AS h " +
-                                           "WHERE h.Delete_Reason IS NULL " +
-                                           "AND h." + primaryKey + " NOT IN " +
-                                           "(" +
                                              "SELECT l." + primaryKey + " " +
-                                             "FROM Landing." + tableName + " AS l));";
+                                             "FROM Landing." + tableName + " l);";
 
                 getAddList.ExecuteReader();
                 c.Close();
@@ -105,6 +102,21 @@ namespace personal_cdc_test
             {
                 MessageBox.Show(sfe.ToString());
             }
+        }
+
+        public void HdsUpdate()
+        {
+
+        }
+
+        public void HdsSameRecord()
+        {
+
+        }
+
+        public void HdsDifferentRecord()
+        {
+
         }
 
         /// <summary>

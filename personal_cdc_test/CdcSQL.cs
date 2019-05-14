@@ -102,6 +102,13 @@ namespace personal_cdc_test
             }
         }
 
+        /// <summary>
+        /// Runs through a basic boolean logic to determine if a record needs to be updated or not.
+        /// Records that have to be updated are soft deleted in the HDS.
+        /// New records are added in the add method rather than here.
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="tableName"></param>
         public void HdsUpdate(IDbConnection c, string tableName)
         {
             try
@@ -147,6 +154,24 @@ namespace personal_cdc_test
                                                    "AND (" + whereClause + ");";
 
                 updateChangedRecords.ExecuteReader();
+                c.Close();
+            }
+            catch (SnowflakeDbException sfe)
+            {
+                MessageBox.Show(sfe.ToString());
+            }
+        }
+
+        public void TruncateLanding(IDbConnection c, string tableName)
+        {
+            try
+            {
+                c.Open();
+                IDbCommand truncateLanding = c.CreateCommand();
+
+                truncateLanding.CommandText = "TRUNCATE TABLE Landing." + tableName + ";";
+
+                truncateLanding.ExecuteReader();
                 c.Close();
             }
             catch (SnowflakeDbException sfe)

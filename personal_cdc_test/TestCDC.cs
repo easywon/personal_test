@@ -21,12 +21,7 @@ namespace personal_cdc_test
         //pass: Sage.4242
         //wh: COMPUTE_WH
 
-        string snowConnectInfo = "ACCOUNT=zs31584;" +
-                                 "HOST=zs31584.east-us-2.azure.snowflakecomputing.com;" +
-                                 "USER=CraigWeiss;" +
-                                 "PASSWORD=Sage.4242;" +
-                                 "WAREHOUSE=COMPUTE_WH;" +
-                                 "DB=SANDBOX_MODEL_PETER;";
+
 
 
         public TestCDC()
@@ -36,20 +31,11 @@ namespace personal_cdc_test
             mainMessage.Text = "Welcome!";
         }
 
-        private void mainMessage_Click(object sender, EventArgs e)
-        {
-            
-        }
-
         private void connectToSQL_Click(object sender, EventArgs e)
         {
-            OdbcConnectionStringBuilder builder = new OdbcConnectionStringBuilder();
-            builder.Driver = "SQL Server";
-            builder.Add("Server", "cougar5");
-            builder.Add("Database", "SANDBOX_MODEL_PETER");
-            builder.Add("Trusted_Connection", "Yes");
-            
-            IDbConnection sqlConn = new OdbcConnection(builder.ConnectionString);
+            // SQL Socket connection
+            var connector = new Connection();
+            IDbConnection sqlConn = connector.sqlSocket();
 
             try
             {
@@ -83,14 +69,15 @@ namespace personal_cdc_test
 
         private void connectToSnow_Click(object sender, EventArgs e)
         {
-            IDbConnection conn = new SnowflakeDbConnection();
-            conn.ConnectionString = snowConnectInfo;
+            // Snowflake socket connection.
+            var connector = new Connection();
+            IDbConnection snowConn = connector.snowSocket();
 
             try
             {
-                conn.Open();
-                IDbCommand landingCmd = conn.CreateCommand();
-                IDbCommand hdsCmd = conn.CreateCommand();
+                snowConn.Open();
+                IDbCommand landingCmd = snowConn.CreateCommand();
+                IDbCommand hdsCmd = snowConn.CreateCommand();
 
                 landingCmd.CommandText = "SELECT * FROM Landing.Customer;";
                 hdsCmd.CommandText = "SELECT * FROM HDS.Customer WHERE Delete_Datetime IS NULL;";
@@ -147,7 +134,7 @@ namespace personal_cdc_test
                     else if(!matchFound && newEntry)
                     {
                         // Insert new record
-                        IDbCommand hdsInsert = conn.CreateCommand();
+                        IDbCommand hdsInsert = snowConn.CreateCommand();
                         
                         hdsInsert.CommandText = "INSERT INTO Hds.Customer(Id, Name, Load_Datetime) VALUES (" +
                                              landingRead.GetInt32(0) + ", '" +
@@ -169,7 +156,7 @@ namespace personal_cdc_test
                         MessageBox.Show("In Update");
 
                         // Update the old entry with delete reason and date.
-                        IDbCommand hdsUpdate = conn.CreateCommand();
+                        IDbCommand hdsUpdate = snowConn.CreateCommand();
                         hdsUpdate.CommandText = "UPDATE Hds.Customer " +
                                                 "SET Delete_Reason = 2, Delete_Datetime = CURRENT_DATE " +
                                                 "WHERE Id = " + replaceId + " AND Delete_Datetime IS NULL;";
@@ -177,7 +164,7 @@ namespace personal_cdc_test
                         hdsUpdate.ExecuteReader();
 
                         // Insert new record.
-                        IDbCommand hdsInsert = conn.CreateCommand();
+                        IDbCommand hdsInsert = snowConn.CreateCommand();
 
                         hdsInsert.CommandText = "INSERT INTO Hds.Customer(Id, Name, Load_Datetime) VALUES (" +
                                              landingRead.GetInt32(0) + ", '" +
@@ -194,12 +181,56 @@ namespace personal_cdc_test
            
 
                 landingRead.Close();
-                conn.Close();
+                snowConn.Close();
             }
             catch (SnowflakeDbException sfe)
             {
                 mainMessage.Text = sfe.ToString();
             }
+        }
+
+        private void DeleteHDSButton_Click(object sender, EventArgs e)
+        {
+            // Snowflake socket connection.
+            var connector = new Connection();
+            IDbConnection snowConn = connector.snowSocket();
+
+            // CDC function object
+            var op = new CdcSQL();
+            op.HdsDelete(snowConn, "Customer");
+
+            MessageBox.Show("Items in Hds deleted");
+        }
+
+        private void UpdateHdsButton_Click(object sender, EventArgs e)
+        {
+            // Snowflake socket connection.
+            var connector = new Connection();
+            IDbConnection snowConn = connector.snowSocket();
+
+            // CDC function object
+            var op = new CdcSQL();
+            op.HdsUpdate(snowConn, "Customer");
+
+            MessageBox.Show("Update complete.");
+        }
+
+        private void AddHDSButton_Click(object sender, EventArgs e)
+        {
+            // Snowflake socket connection.
+            var connector = new Connection();
+            IDbConnection snowConn = connector.snowSocket();
+
+            // CDC function object
+            var op = new CdcSQL();
+            op.HdsAdd(snowConn, "Customer");
+
+            MessageBox.Show("Added new items to the HDS");
+        }
+
+        private void ButtonTableLayout_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }

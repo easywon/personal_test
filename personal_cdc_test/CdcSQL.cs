@@ -28,14 +28,14 @@ namespace personal_cdc_test
             try
             {
                 c.Open();
-                IDbCommand getAddList = c.CreateCommand();
-
+                
                 List<string> columnName = GetColumnName(c, tableName);
                 int width = columnName.Count();
+                string primaryKey = columnName[0];
 
                 // columnVariable represents the names of the column parameter that is used to fill the hds table.
                 // Formatted to "(col1, col2, col3, ..., colx)"
-                string columnVariable = " (";
+                string columnVariable = "";
 
                 for(int i = 0; i < width; i++)
                 {
@@ -44,23 +44,21 @@ namespace personal_cdc_test
                     {
                         columnVariable += ", ";
                     }
-                    else
-                    {
-                        columnVariable += ") ";
-                    }
                 }
 
-                // Add all active ids in Landing that are not present in HDS to HDS.
-                getAddList.CommandText = "INSERT INTO HDS." + tableName + columnVariable +
-                                         "SELECT Id, Name, Load_Datetime " +
-                                         "FROM Landing." + tableName + " l " +
-                                         "WHERE l.Id NOT IN " +
-                                         "(" +
-                                         "SELECT h.Id " +
-                                         "FROM Hds." + tableName + " h " +
-                                         "WHERE h.Delete_Reason IS NULL);";
+                IDbCommand addNewRecords = c.CreateCommand();
 
-                getAddList.ExecuteReader();
+                // Add all active ids in Landing that are not present in HDS to HDS.
+                addNewRecords.CommandText = "INSERT INTO HDS." + tableName + " (" + columnVariable + ") " +
+                                            "SELECT " + columnVariable + " " +
+                                            "FROM Landing." + tableName + " l " +
+                                            "WHERE l." + primaryKey + " NOT IN " +
+                                            "(" +
+                                            "SELECT h." + primaryKey + " " +
+                                            "FROM Hds." + tableName + " h " +
+                                            "WHERE h.Delete_Reason IS NULL);";
+
+                addNewRecords.ExecuteReader();
                 c.Close();
             }
             catch (SnowflakeDbException sfe)
@@ -79,23 +77,23 @@ namespace personal_cdc_test
             try
             {
                 c.Open();
-                IDbCommand getAddList = c.CreateCommand();
 
                 // Delete sql only requires the primary key for the deletion.
                 List<string> columnName = GetColumnName(c, tableName);
                 string primaryKey = columnName[0];
-                
+
+                IDbCommand deleteOldRecords = c.CreateCommand();
 
                 // Update all active ids in HDS that are not present in Landing to soft delete.
-                getAddList.CommandText = "UPDATE Hds." + tableName + " " +
-                                         "SET Delete_Reason = 1, Delete_Datetime = CURRENT_DATE " +
-                                         "WHERE Delete_Reason IS NULL " +
-                                         "AND " + primaryKey + " NOT IN " +
-                                         "(" +
-                                             "SELECT l." + primaryKey + " " +
-                                             "FROM Landing." + tableName + " l);";
+                deleteOldRecords.CommandText = "UPDATE Hds." + tableName + " " +
+                                               "SET Delete_Reason = 1, Delete_Datetime = CURRENT_DATE " +
+                                               "WHERE Delete_Reason IS NULL " +
+                                               "AND " + primaryKey + " NOT IN " +
+                                               "(" +
+                                                 "SELECT l." + primaryKey + " " +
+                                                 "FROM Landing." + tableName + " l);";
 
-                getAddList.ExecuteReader();
+                deleteOldRecords.ExecuteReader();
                 c.Close();
             }
             catch (SnowflakeDbException sfe)
@@ -104,19 +102,57 @@ namespace personal_cdc_test
             }
         }
 
-        public void HdsUpdate()
+        public void HdsUpdate(IDbConnection c, string tableName)
         {
+            try
+            {
+                c.Open();
 
-        }
+                // Generate where statement based on column names
+                List<string> columnName = GetColumnName(c, tableName);
 
-        public void HdsSameRecord()
-        {
+                // Save the first column as the primary key. Primary key will determine which records to compare.
+                string primaryKey = columnName[0];
+                columnName.RemoveAt(0);
 
-        }
+                // Leave out the last column (Load_timedate) as we only care about the hard contents of the records.
+                int width = columnName.Count() - 1;
+                string whereClause = "";
 
-        public void HdsDifferentRecord()
-        {
+                for (int i = 0; i < width; i++)
+                {
+                    string attr = columnName[i];
+                    whereClause += "((" +
+                                   "h." + attr + " <> " + "l." + attr + " " +
+                                   "OR h." + attr + " IS NULL " +       
+                                   "OR l." + attr + " IS NULL) " +
+                                   "AND NOT (" +
+                                   "h." + attr + " IS NULL " +
+                                   "AND l." + attr + " IS NULL)) ";
+                    
+                    if(i < width - 1)
+                    {
+                        whereClause += "OR ";
+                    }
+                }
 
+                IDbCommand updateChangedRecords = c.CreateCommand();
+
+                // Update records that have been changed to be soft deleted.
+                updateChangedRecords.CommandText = "UPDATE Hds." + tableName + " h " +
+                                                   "SET Delete_Reason = 2, Delete_datetime = CURRENT_DATE " +
+                                                   "FROM Landing." + tableName + " l " +
+                                                   "WHERE Delete_reason IS NULL " +
+                                                   "AND h." + primaryKey + " = l." + primaryKey + " " +
+                                                   "AND (" + whereClause + ");";
+
+                updateChangedRecords.ExecuteReader();
+                c.Close();
+            }
+            catch (SnowflakeDbException sfe)
+            {
+                MessageBox.Show(sfe.ToString());
+            }
         }
 
         /// <summary>

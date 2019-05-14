@@ -202,6 +202,19 @@ namespace personal_cdc_test
             MessageBox.Show("Items in Hds deleted");
         }
 
+        private void UpdateHdsButton_Click(object sender, EventArgs e)
+        {
+            // Snowflake socket connection.
+            var connector = new Connection();
+            IDbConnection snowConn = connector.snowSocket();
+
+            // CDC function object
+            var op = new CdcSQL();
+            op.HdsUpdate(snowConn, "Customer");
+
+            MessageBox.Show("Update complete.");
+        }
+
         private void AddHDSButton_Click(object sender, EventArgs e)
         {
             // Snowflake socket connection.

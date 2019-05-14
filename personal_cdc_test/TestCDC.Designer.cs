@@ -32,10 +32,11 @@
             this.mainMessage = new System.Windows.Forms.Label();
             this.mainLayoutTable = new System.Windows.Forms.TableLayoutPanel();
             this.buttonTableLayout = new System.Windows.Forms.TableLayoutPanel();
+            this.addHDSButton = new System.Windows.Forms.Button();
             this.deleteHDSButton = new System.Windows.Forms.Button();
             this.connectToSQL = new System.Windows.Forms.Button();
             this.connectToSnow = new System.Windows.Forms.Button();
-            this.addHDSButton = new System.Windows.Forms.Button();
+            this.updateHdsButton = new System.Windows.Forms.Button();
             this.mainLayoutTable.SuspendLayout();
             this.buttonTableLayout.SuspendLayout();
             this.SuspendLayout();
@@ -71,10 +72,11 @@
             // 
             this.buttonTableLayout.ColumnCount = 1;
             this.buttonTableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.buttonTableLayout.Controls.Add(this.addHDSButton, 0, 1);
             this.buttonTableLayout.Controls.Add(this.deleteHDSButton, 0, 0);
+            this.buttonTableLayout.Controls.Add(this.addHDSButton, 0, 2);
             this.buttonTableLayout.Controls.Add(this.connectToSQL, 0, 4);
             this.buttonTableLayout.Controls.Add(this.connectToSnow, 0, 3);
+            this.buttonTableLayout.Controls.Add(this.updateHdsButton, 0, 1);
             this.buttonTableLayout.Dock = System.Windows.Forms.DockStyle.Fill;
             this.buttonTableLayout.Location = new System.Drawing.Point(264, 93);
             this.buttonTableLayout.Name = "buttonTableLayout";
@@ -88,6 +90,17 @@
             this.buttonTableLayout.Size = new System.Drawing.Size(255, 465);
             this.buttonTableLayout.TabIndex = 2;
             this.buttonTableLayout.Paint += new System.Windows.Forms.PaintEventHandler(this.ButtonTableLayout_Paint);
+            // 
+            // addHDSButton
+            // 
+            this.addHDSButton.Location = new System.Drawing.Point(35, 221);
+            this.addHDSButton.Margin = new System.Windows.Forms.Padding(35);
+            this.addHDSButton.Name = "addHDSButton";
+            this.addHDSButton.Size = new System.Drawing.Size(185, 23);
+            this.addHDSButton.TabIndex = 4;
+            this.addHDSButton.Text = "Add to HDS";
+            this.addHDSButton.UseVisualStyleBackColor = true;
+            this.addHDSButton.Click += new System.EventHandler(this.AddHDSButton_Click);
             // 
             // deleteHDSButton
             // 
@@ -124,17 +137,16 @@
             this.connectToSnow.UseVisualStyleBackColor = true;
             this.connectToSnow.Click += new System.EventHandler(this.connectToSnow_Click);
             // 
-            // addHDSButton
+            // updateHdsButton
             // 
-            this.addHDSButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.addHDSButton.Location = new System.Drawing.Point(35, 128);
-            this.addHDSButton.Margin = new System.Windows.Forms.Padding(35);
-            this.addHDSButton.Name = "addHDSButton";
-            this.addHDSButton.Size = new System.Drawing.Size(185, 23);
-            this.addHDSButton.TabIndex = 4;
-            this.addHDSButton.Text = "Add to HDS";
-            this.addHDSButton.UseVisualStyleBackColor = true;
-            this.addHDSButton.Click += new System.EventHandler(this.AddHDSButton_Click);
+            this.updateHdsButton.Location = new System.Drawing.Point(35, 128);
+            this.updateHdsButton.Margin = new System.Windows.Forms.Padding(35);
+            this.updateHdsButton.Name = "updateHdsButton";
+            this.updateHdsButton.Size = new System.Drawing.Size(185, 23);
+            this.updateHdsButton.TabIndex = 5;
+            this.updateHdsButton.Text = "Update HDS";
+            this.updateHdsButton.UseVisualStyleBackColor = true;
+            this.updateHdsButton.Click += new System.EventHandler(this.UpdateHdsButton_Click);
             // 
             // TestCDC
             // 
@@ -158,6 +170,7 @@
         private System.Windows.Forms.Button connectToSnow;
         private System.Windows.Forms.Button deleteHDSButton;
         private System.Windows.Forms.Button addHDSButton;
+        private System.Windows.Forms.Button updateHdsButton;
     }
 }
 

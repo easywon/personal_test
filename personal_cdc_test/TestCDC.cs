@@ -69,22 +69,54 @@ namespace personal_cdc_test
 
         private void connectToSnow_Click(object sender, EventArgs e)
         {
-            // Snowflake socket connection.
-            var connector = new Connection();
-            IDbConnection snowConn = connector.snowSocket();
+            using (IDbConnection snowConn = new SnowflakeDbConnection())
+            {
+                // Open the connection
+                snowConn.ConnectionString = new Connection().SnowConnectInfo;
+                snowConn.Open();
 
-            var logger = new SnowLog();
-            var op = new CdcSQL();
+                // Declare the command and transactions which will be used throughout the entire batch job.
+                IDbCommand cmd = snowConn.CreateCommand();
+                IDbTransaction transaction;
 
-            snowConn.Open();
+                // Start the transaction
+                transaction = snowConn.BeginTransaction();
 
+                // Must assign both transaction object and connection
+                // to Command object for a pending local transaction
+                cmd.Connection = snowConn;
+                cmd.Transaction = transaction;
 
+                try
+                {
+                    var op = new CdcSQL();
+                    var log = new SnowLog();
 
-            snowConn.Close();
+                    log.SetJobstart(cmd);
+
+                    op.HdsDelete(cmd, "Customer");
+                    MessageBox.Show("Deleted");
+                    op.HdsUpdate(cmd, "Customer");
+                    MessageBox.Show("Updated");
+                    op.HdsAdd(cmd, "Customer");
+                    MessageBox.Show("Added");
+
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    transaction.Rollback();
+                }
+
+                snowConn.Close();
+            }
         }
 
+        
         private void DeleteHDSButton_Click(object sender, EventArgs e)
         {
+            /*
             // Snowflake socket connection.
             var connector = new Connection();
             IDbConnection snowConn = connector.snowSocket();
@@ -93,11 +125,12 @@ namespace personal_cdc_test
             var op = new CdcSQL();
             op.HdsDelete(snowConn, "Customer");
 
-            MessageBox.Show("Items in Hds deleted");
+            MessageBox.Show("Items in Hds deleted");*/
         }
 
         private void UpdateHdsButton_Click(object sender, EventArgs e)
         {
+            /*
             // Snowflake socket connection.
             var connector = new Connection();
             IDbConnection snowConn = connector.snowSocket();
@@ -106,11 +139,12 @@ namespace personal_cdc_test
             var op = new CdcSQL();
             op.HdsUpdate(snowConn, "Customer");
 
-            MessageBox.Show("Update complete.");
+            MessageBox.Show("Update complete.");*/
         }
 
         private void AddHDSButton_Click(object sender, EventArgs e)
         {
+            /*
             // Snowflake socket connection.
             var connector = new Connection();
             IDbConnection snowConn = connector.snowSocket();
@@ -119,10 +153,10 @@ namespace personal_cdc_test
             var op = new CdcSQL();
             op.HdsAdd(snowConn, "Customer");
 
-            MessageBox.Show("Added new items to the HDS");
+            MessageBox.Show("Added new items to the HDS");*/
         }
 
-        private void ButtonTableLayout_Paint(object sender, PaintEventArgs e)
+            private void ButtonTableLayout_Paint(object sender, PaintEventArgs e)
         {
 
         }

@@ -52,11 +52,10 @@ namespace personal_cdc_test
             transactionRollback.ExecuteReader();
         }
 
-        public void SetJobstart(IDbConnection c)
+        public void SetJobstart(IDbCommand c)
         {
-            IDbCommand cmd = c.CreateCommand();
-            cmd.CommandText = "SET Jobstart = CURRENT_TIMESTAMP;";
-            cmd.ExecuteReader();
+            c.CommandText = "SET Jobstart = CURRENT_TIMESTAMP;";
+            c.ExecuteReader();
         }
     }
 }

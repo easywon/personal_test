@@ -13,6 +13,25 @@ namespace personal_cdc_test
 {
     class Connection
     {
+        private string snowConnectInfo = "ACCOUNT=zs31584;" +
+                                         "HOST=zs31584.east-us-2.azure.snowflakecomputing.com;" +
+                                         "USER=CraigWeiss;" +
+                                         "PASSWORD=Sage.4242;" +
+                                         "WAREHOUSE=COMPUTE_WH;" +
+                                         "DB=SANDBOX_MODEL_PETER;";
+
+        public string SnowConnectInfo
+        {
+            get
+            {
+                return snowConnectInfo;
+            }
+            set
+            {
+                snowConnectInfo = value;
+            }
+        }
+
         // Create a connection to the SQL server
         public IDbConnection sqlSocket()
         {
@@ -25,23 +44,6 @@ namespace personal_cdc_test
             IDbConnection socket = new OdbcConnection(builder.ConnectionString);
             return socket;
         }
-        
-        // Create a connection to Snowflake server
-        public IDbConnection snowSocket()
-        {
-            string snowConnectInfo = "ACCOUNT=zs31584;" +
-                                     "HOST=zs31584.east-us-2.azure.snowflakecomputing.com;" +
-                                     "USER=CraigWeiss;" +
-                                     "PASSWORD=Sage.4242;" +
-                                     "WAREHOUSE=COMPUTE_WH;" +
-                                     "DB=SANDBOX_MODEL_PETER;";
-
-            IDbConnection conn = new SnowflakeDbConnection();
-            conn.ConnectionString = snowConnectInfo;
-
-            return conn;
-        }
-
         // Implement dynamic connection key creation later
     }
 }

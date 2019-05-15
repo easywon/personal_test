@@ -11,3 +11,6 @@ personal_cdc_test
     Ran into issues with session continuity. Changing the scope of the transaction from Snowflake to .NET.
     The transaction will be constrained to be inside C# only.
 
+    3:04 PM - The method of constraining transactions to be inside C# only worked well.
+              Commits, rollbacks, and session management works as desired.
+

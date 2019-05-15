@@ -73,38 +73,14 @@ namespace personal_cdc_test
             var connector = new Connection();
             IDbConnection snowConn = connector.snowSocket();
 
+            var logger = new SnowLog();
+            var op = new CdcSQL();
+
             snowConn.Open();
 
-            IDbCommand transaction = snowConn.CreateCommand();
-            transaction.CommandText = "Begin;";
-
-            try
-            {   
-                IDbCommand landingCmd = snowConn.CreateCommand();
-                IDbCommand hdsCmd = snowConn.CreateCommand();
 
 
-                landingCmd.CommandText = "INSERT INTO Landing.Customer VALUES (7, 'bob', 'bob', 'Cali', CURRENT_TIMESTAMP);";
-                hdsCmd.CommandText = "INSERT INTO HDS.Customer VALUES (7, 'bob', 'bob', 'Cali', CURRENT_TIMESTAMP, NULL);";
-
-                transaction.ExecuteReader();
-                landingCmd.ExecuteReader();
-                hdsCmd.ExecuteReader();
-
-                transaction.CommandText = "COMMIT;";
-
-                transaction.ExecuteReader();
-                
-                snowConn.Close();
-            }
-            catch (SnowflakeDbException sfe)
-            {
-                mainMessage.Text = sfe.ToString();
-
-                transaction.CommandText = "ROLLBACK;";
-
-                transaction.ExecuteReader();
-            }
+            snowConn.Close();
         }
 
         private void DeleteHDSButton_Click(object sender, EventArgs e)

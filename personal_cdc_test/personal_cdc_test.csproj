@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="CdcSQL.cs" />
     <Compile Include="Connection.cs" />
+    <Compile Include="SnowLog.cs" />
     <Compile Include="TestCDC.cs">
       <SubType>Form</SubType>
     </Compile>

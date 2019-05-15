@@ -1,0 +1,2 @@
+Creating tables in Snowflake requires the the session set to be under timestamp_lzt.
+Run "alter session set timestamp_type_mapping = timestamp_ltz;" before creating tables with data type "timestamp".

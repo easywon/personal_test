@@ -12,50 +12,97 @@ namespace personal_cdc_test
 {
     class SnowLog
     {
-        /* Implement logging features
-         * Requirements:
-         *  Commit
-         *  Rollback
-         *  Begin
-         *  Insert logs for each step
-         *   - Insert on begin, update on end
-         *  
-         */
-        public void TransactionBegin(IDbConnection c)
+        private string step;
+        private string stepLabel;
+        private string stepDescription;
+        private bool stepStatus;
+        private string stepTargetTable;
+        private int stepRowsAffected;
+
+        #region
+        public string Step
         {
-            IDbCommand transactionBegin = c.CreateCommand();
-            transactionBegin.CommandText = "BEGIN TRANSACTION";
-            transactionBegin.ExecuteReader();
+            get { return step; }
+            set { step = value; }
+        }
+        public string StepLabel
+        {
+            get { return stepLabel; }
+            set { stepLabel = value; }
+        }
+        public string StepDescription
+        {
+            get { return stepDescription; }
+            set { stepDescription = value; }
+        }
+        public bool StepStatus
+        {
+            get { return stepStatus; }
+            set { stepStatus = value; }
         }
 
-        public void TransactionCommit(IDbConnection c)
+        public string StepTargetTable
         {
-            IDbCommand transactionCommit = c.CreateCommand();
-            IDbCommand unsetJobstart = c.CreateCommand();
-
-            transactionCommit.CommandText = "COMMIT;";
-            unsetJobstart.CommandText = "UNSET Jobstart;";
-
-            unsetJobstart.ExecuteReader();
-            transactionCommit.ExecuteReader(); 
+            get { return stepTargetTable; }
+            set { stepTargetTable = value; }
         }
-
-        public void TransactionRollback(IDbConnection c)
+        public int StepRowsAffected
         {
-            IDbCommand transactionRollback = c.CreateCommand();
-            IDbCommand unsetJobstart = c.CreateCommand();
-
-            transactionRollback.CommandText = "ROLLBACK;";
-            unsetJobstart.CommandText = "UNSET Jobstart;";
-
-            unsetJobstart.ExecuteReader();
-            transactionRollback.ExecuteReader();
+            get { return stepRowsAffected; }
+            set { stepRowsAffected = value; }
         }
+        #endregion
 
-        public void SetJobstart(IDbCommand c)
+        // Constructor - Make the necessary table for log storage if it does not exist. 
+        public SnowLog(string connectInfo)
         {
-            c.CommandText = "SET Jobstart = CURRENT_TIMESTAMP;";
-            c.ExecuteReader();
+            using (IDbConnection c = new SnowflakeDbConnection())
+            {
+                c.ConnectionString = connectInfo;
+                c.Open();
+
+                // Declare the command and transactions which will be used throughout the entire batch job.
+                IDbCommand cmd = c.CreateCommand();
+                IDbTransaction logTransaction;
+
+                // Start the transaction
+                logTransaction = c.BeginTransaction();
+
+                // Must assign both transaction object and connection
+                // to Command object for a pending local transaction
+                cmd.Connection = c;
+                cmd.Transaction = logTransaction;
+
+                try
+                {
+                    // Ensure the Datetime columns will have the proper data type.
+                    cmd.CommandText = "ALTER SESSION SET timestamp_type_mapping = timestamp_ltz;";
+                    cmd.ExecuteReader();
+
+                    cmd.CommandText = "CREATE TABLE IF NOT EXISTS Log.TransactionJobTracking ( " +
+                                        "BatchID TIMESTAMP, " +
+                                        "JobDatabase string, " +
+                                        "JobSchema string, " +
+                                        "JobName string, " +
+                                        "Step string, " +
+                                        "StepDescription string, " +
+                                        "StepStatus bit, " +
+                                        "StepTargetTable string, " +
+                                        "StepRowsAffected int, " +
+                                        "StepStartDatetime TIMESTAMP, " +
+                                        "StepEndDatetime TIMESTAMP); ";
+                    cmd.ExecuteReader();
+
+                    logTransaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    logTransaction.Rollback();
+                }
+
+                c.Close();
+            }
         }
     }
 }

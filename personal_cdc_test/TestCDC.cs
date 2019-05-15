@@ -90,16 +90,14 @@ namespace personal_cdc_test
                 try
                 {
                     var op = new CdcSQL();
-                    var log = new SnowLog();
 
-                    log.SetJobstart(cmd);
+                    op.SetJobstart(cmd);
 
                     op.HdsDelete(cmd, "Customer");
-                    MessageBox.Show("Deleted");
                     op.HdsUpdate(cmd, "Customer");
-                    MessageBox.Show("Updated");
                     op.HdsAdd(cmd, "Customer");
-                    MessageBox.Show("Added");
+
+                    op.TruncateLanding(cmd, "Customer");
 
                     transaction.Commit();
                 }
@@ -113,19 +111,44 @@ namespace personal_cdc_test
             }
         }
 
-        
+
         private void DeleteHDSButton_Click(object sender, EventArgs e)
         {
-            /*
-            // Snowflake socket connection.
-            var connector = new Connection();
-            IDbConnection snowConn = connector.snowSocket();
+            using (IDbConnection snowConn = new SnowflakeDbConnection())
+            {
+                // Open the connection
+                snowConn.ConnectionString = new Connection().SnowConnectInfo;
+                snowConn.Open();
 
-            // CDC function object
-            var op = new CdcSQL();
-            op.HdsDelete(snowConn, "Customer");
+                // Declare the command and transactions which will be used throughout the entire batch job.
+                IDbCommand cmd = snowConn.CreateCommand();
+                IDbTransaction transaction;
 
-            MessageBox.Show("Items in Hds deleted");*/
+                // Start the transaction
+                transaction = snowConn.BeginTransaction();
+
+                // Must assign both transaction object and connection
+                // to Command object for a pending local transaction
+                cmd.Connection = snowConn;
+                cmd.Transaction = transaction;
+
+                try
+                {
+                    MessageBox.Show(DateTime.Now.ToString());
+                    cmd.CommandText = "INSERT INTO Log.Date " +
+                                      "VALUES (" + DateTime.Now.ToString() + ") ";
+                    cmd.ExecuteReader();
+
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    transaction.Rollback();
+                }
+
+                snowConn.Close();
+            }
         }
 
         private void UpdateHdsButton_Click(object sender, EventArgs e)

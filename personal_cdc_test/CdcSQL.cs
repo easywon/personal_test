@@ -165,5 +165,11 @@ namespace personal_cdc_test
 
             return columnName;
         }
+
+        public void SetJobstart(IDbCommand c)
+        {
+            c.CommandText = "SET Jobstart = CURRENT_TIMESTAMP;";
+            c.ExecuteReader();
+        }
     }
 }

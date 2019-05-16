@@ -10,49 +10,8 @@ using Snowflake.Data.Client;
 
 namespace personal_cdc_test
 {
-    class SnowLog
+    public class SnowLog
     {
-        private string step;
-        private string stepLabel;
-        private string stepDescription;
-        private bool stepStatus;
-        private string stepTargetTable;
-        private int stepRowsAffected;
-
-        #region
-        public string Step
-        {
-            get { return step; }
-            set { step = value; }
-        }
-        public string StepLabel
-        {
-            get { return stepLabel; }
-            set { stepLabel = value; }
-        }
-        public string StepDescription
-        {
-            get { return stepDescription; }
-            set { stepDescription = value; }
-        }
-        public bool StepStatus
-        {
-            get { return stepStatus; }
-            set { stepStatus = value; }
-        }
-
-        public string StepTargetTable
-        {
-            get { return stepTargetTable; }
-            set { stepTargetTable = value; }
-        }
-        public int StepRowsAffected
-        {
-            get { return stepRowsAffected; }
-            set { stepRowsAffected = value; }
-        }
-        #endregion
-
         // Constructor - Make the necessary table for log storage if it does not exist. 
         public SnowLog(string connectInfo)
         {
@@ -86,7 +45,7 @@ namespace personal_cdc_test
                                         "JobName string, " +
                                         "Step string, " +
                                         "StepDescription string, " +
-                                        "StepStatus bit, " +
+                                        "StepStatus boolean, " +
                                         "StepTargetTable string, " +
                                         "StepRowsAffected int, " +
                                         "StepStartDatetime TIMESTAMP, " +
@@ -102,6 +61,66 @@ namespace personal_cdc_test
                 }
 
                 c.Close();
+            }
+        }
+
+        public void StartLog(IDbConnection c, LoggingInfo l)
+        {
+            IDbCommand logger = c.CreateCommand();
+            IDbTransaction logTransaction = c.BeginTransaction();
+
+            logger.Connection = c;
+            logger.Transaction = logTransaction;
+
+            try
+            {
+                logger.CommandText = "INSERT INTO Log.TransactionJobTracking " +
+                                     "Values(" +
+                                     "$Jobstart, " +
+                                     "CURRENT_DATABASE()," +
+                                     "CURRENT_SCHEMA()," +
+                                     "'Landing to HDS - CDC'," +
+                                     "'" + l.Step + "'," +
+                                     "'" + l.StepDescription + "'," +
+                                     "" + l.StepStatus + "," +
+                                     "'" + l.StepTargetTable + "'," +
+                                     "" + l.StepRowsAffected + "," +
+                                     "$Jobstart," +
+                                     "CURRENT_TIMESTAMP)";
+
+                IDataReader reader = logger.ExecuteReader();
+                while (reader.Read())
+                {
+                    MessageBox.Show(reader.GetString(0));
+                }
+
+                logTransaction.Commit();
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                logTransaction.Rollback();
+            }
+        }
+
+        // Internal class to track necessary log information
+        public class LoggingInfo
+        {
+            public string Step { get; set; }
+            public string StepLabel { get; set; }
+            public string StepDescription { get; set; }
+            public bool StepStatus { get; set; }
+            public string StepTargetTable { get; set; }
+            public int StepRowsAffected { get; set; }
+
+            public LoggingInfo(string step, string stepLabel, string stepDescription, bool stepStatus, string stepTargetTable, int stepRowsAffected)
+            {
+                Step = step;
+                StepLabel = stepLabel;
+                StepDescription = stepDescription;
+                StepStatus = stepStatus;
+                StepTargetTable = stepTargetTable;
+                StepRowsAffected = stepRowsAffected;
             }
         }
     }

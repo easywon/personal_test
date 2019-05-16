@@ -1,2 +1,12 @@
 Creating tables in Snowflake requires the the session set to be under timestamp_lzt.
 Run "alter session set timestamp_type_mapping = timestamp_ltz;" before creating tables with data type "timestamp".
+
+Multiple transactions can be started and Snowflake variables will pass between each other as long as the connection is the same.
+
+Transactions in Snowflake 
+    - Establish connection information
+    - Open connection
+    - Create IDbCommand ON the connection
+    - Create transaction
+    - Begin the transaction ON the connection.
+    - Set the command's connection and transaction.

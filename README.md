@@ -14,3 +14,6 @@ personal_cdc_test
     3:04 PM - The method of constraining transactions to be inside C# only worked well.
               Commits, rollbacks, and session management works as desired.
 
+5/16/19
+    9:38 AM - Starting to outline basic logging process.
+    12:00 PM - Managed to create an internal transaction to handle the insertion of new log items.

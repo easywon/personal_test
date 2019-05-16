@@ -21,13 +21,13 @@ namespace personal_cdc_test
         //pass: Sage.4242
         //wh: COMPUTE_WH
 
-
-
-
+        SnowLog logger;
+        
         public TestCDC()
         {
             InitializeComponent();
 
+            logger = new SnowLog(new Connection().SnowConnectInfo);
             mainMessage.Text = "Welcome!";
         }
 
@@ -153,16 +153,58 @@ namespace personal_cdc_test
 
         private void UpdateHdsButton_Click(object sender, EventArgs e)
         {
-            /*
-            // Snowflake socket connection.
-            var connector = new Connection();
-            IDbConnection snowConn = connector.snowSocket();
+            using (IDbConnection snowConn = new SnowflakeDbConnection())
+            {
+                // Open the connection
+                snowConn.ConnectionString = new Connection().SnowConnectInfo;
+                snowConn.Open();
 
-            // CDC function object
-            var op = new CdcSQL();
-            op.HdsUpdate(snowConn, "Customer");
+                // Declare the command and transactions which will be used throughout the entire batch job.
+                IDbCommand cmd = snowConn.CreateCommand();
+                IDbTransaction transaction;
 
-            MessageBox.Show("Update complete.");*/
+                // Start the transaction
+                transaction = snowConn.BeginTransaction();
+
+                // Must assign both transaction object and connection
+                // to Command object for a pending local transaction
+                cmd.Connection = snowConn;
+                cmd.Transaction = transaction;
+
+                try
+                {
+                    var op = new CdcSQL();
+
+                    op.SetJobstart(cmd);
+
+                    cmd.CommandText = "SELECT $Jobstart";
+                    IDataReader reader = cmd.ExecuteReader();
+
+                    SnowLog.LoggingInfo logInfo = new SnowLog.LoggingInfo("Step 1",
+                                                      "Testing",
+                                                      "Debugging the process of logging",
+                                                      false,
+                                                      "Customer",
+                                                      reader.RecordsAffected);
+
+                    while (reader.Read())
+                    {
+                        MessageBox.Show(reader.GetString(0));
+                    }
+
+
+                    logger.StartLog(snowConn, logInfo);
+
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    transaction.Rollback();
+                }
+
+                snowConn.Close();
+            }
         }
 
         private void AddHDSButton_Click(object sender, EventArgs e)

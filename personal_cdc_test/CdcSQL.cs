@@ -23,7 +23,7 @@ namespace personal_cdc_test
         /// </summary>
         /// <param name="c"></param>
         /// <param name="tableName"></param>
-        public void HdsAdd(IDbCommand c, string tableName)
+        public int HdsAdd(IDbCommand c, string tableName)
         {
             List<string> columnName = GetColumnName(c, tableName);
             int width = columnName.Count();
@@ -52,7 +52,7 @@ namespace personal_cdc_test
                                 "FROM Hds." + tableName + " h " +
                                 "WHERE h.Delete_Reason IS NULL);";
 
-            c.ExecuteReader();
+            return c.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -60,12 +60,13 @@ namespace personal_cdc_test
         /// </summary>
         /// <param name="c"></param>
         /// <param name="tableName"></param>
-        public void HdsDelete(IDbCommand c, string tableName)
+        public int HdsDelete(IDbCommand c, string tableName)
         {
             // Delete sql only requires the primary key for the deletion.
             List<string> columnName = GetColumnName(c, tableName);
+            MessageBox.Show("Yes");
             string primaryKey = columnName[0];
-
+            MessageBox.Show("Yes");
             // Update all active ids in HDS that are not present in Landing to soft delete.
             c.CommandText = "UPDATE Hds." + tableName + " " +
                             "SET Delete_Reason = 1, Delete_Datetime = (SELECT $Jobstart) " +
@@ -75,8 +76,7 @@ namespace personal_cdc_test
                                "SELECT l." + primaryKey + " " +
                                "FROM Landing." + tableName + " l);";
 
-
-            c.ExecuteReader();
+            return c.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace personal_cdc_test
         /// </summary>
         /// <param name="c"></param>
         /// <param name="tableName"></param>
-        public void HdsUpdate(IDbCommand c, string tableName)
+        public int HdsUpdate(IDbCommand c, string tableName)
         {
 
             // Generate where statement based on column names
@@ -125,7 +125,7 @@ namespace personal_cdc_test
                             "AND h." + primaryKey + " = l." + primaryKey + " " +            
                             "AND (" + whereClause + ");";
 
-            c.ExecuteReader();
+            return c.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -162,6 +162,7 @@ namespace personal_cdc_test
             {
                 columnName.Add(reader.GetString(2));
             }
+            reader.Close();
 
             return columnName;
         }

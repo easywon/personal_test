@@ -90,12 +90,54 @@ namespace personal_cdc_test
                 try
                 {
                     var op = new CdcSQL();
+                    int records = 0;
 
                     op.SetJobstart(cmd);
 
-                    op.HdsDelete(cmd, "Customer");
-                    op.HdsUpdate(cmd, "Customer");
-                    op.HdsAdd(cmd, "Customer");
+                    logger.StartLog(snowConn, new SnowLog.LoggingInfo("Step 1",
+                                                                      "Testing",
+                                                                      "Deleting records",
+                                                                      "Customer",
+                                                                      0));
+
+                    records = op.HdsDelete(cmd, "Customer");
+
+                    logger.EndLog(snowConn, new SnowLog.LoggingInfo("Step 1",
+                                                                    "Testing",
+                                                                    "Deleting records",
+                                                                    "Customer",
+                                                                    records));
+
+                    MessageBox.Show("Delete");
+
+                    logger.StartLog(snowConn, new SnowLog.LoggingInfo("Step 2",
+                                                                      "Testing",
+                                                                      "Updating records",
+                                                                      "Customer",
+                                                                      0));
+
+                    records = op.HdsUpdate(cmd, "Customer");
+
+                    logger.EndLog(snowConn, new SnowLog.LoggingInfo("Step 2",
+                                                                    "Testing",
+                                                                    "Updating records",
+                                                                    "Customer",
+                                                                    records));
+                    MessageBox.Show("Update");
+
+                    logger.StartLog(snowConn, new SnowLog.LoggingInfo("Step 3",
+                                                                      "Testing",
+                                                                      "Adding records",
+                                                                      "Customer",
+                                                                      0));
+                    records = op.HdsAdd(cmd, "Customer");
+
+                    logger.EndLog(snowConn, new SnowLog.LoggingInfo("Step 3",
+                                                                    "Testing",
+                                                                    "Adding records",
+                                                                    "Customer",
+                                                                    records));
+                    MessageBox.Show("Add"); 
 
                     op.TruncateLanding(cmd, "Customer");
 
@@ -177,23 +219,8 @@ namespace personal_cdc_test
 
                     op.SetJobstart(cmd);
 
-                    cmd.CommandText = "SELECT $Jobstart";
-                    IDataReader reader = cmd.ExecuteReader();
-
-                    SnowLog.LoggingInfo logInfo = new SnowLog.LoggingInfo("Step 1",
-                                                      "Testing",
-                                                      "Debugging the process of logging",
-                                                      false,
-                                                      "Customer",
-                                                      reader.RecordsAffected);
-
-                    while (reader.Read())
-                    {
-                        MessageBox.Show(reader.GetString(0));
-                    }
 
 
-                    logger.StartLog(snowConn, logInfo);
 
                     transaction.Commit();
                 }

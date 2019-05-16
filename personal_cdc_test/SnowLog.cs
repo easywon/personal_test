@@ -82,21 +82,50 @@ namespace personal_cdc_test
                                      "'Landing to HDS - CDC'," +
                                      "'" + l.Step + "'," +
                                      "'" + l.StepDescription + "'," +
-                                     "" + l.StepStatus + "," +
+                                     "false," +
                                      "'" + l.StepTargetTable + "'," +
                                      "" + l.StepRowsAffected + "," +
                                      "$Jobstart," +
                                      "CURRENT_TIMESTAMP)";
 
-                IDataReader reader = logger.ExecuteReader();
-                while (reader.Read())
-                {
-                    MessageBox.Show(reader.GetString(0));
-                }
-
+                logger.ExecuteReader();
                 logTransaction.Commit();
             }
             catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                logTransaction.Rollback();
+            }
+        }
+
+        public void EndLog(IDbConnection c, LoggingInfo l)
+        {
+            IDbCommand logger = c.CreateCommand();
+            IDbTransaction logTransaction = c.BeginTransaction();
+
+            logger.Connection = c;
+            logger.Transaction = logTransaction;
+
+            try
+            {
+                logger.CommandText = "INSERT INTO Log.TransactionJobTracking " +
+                                     "Values(" +
+                                     "$Jobstart, " +
+                                     "CURRENT_DATABASE()," +
+                                     "CURRENT_SCHEMA()," +
+                                     "'Landing to HDS - CDC'," +
+                                     "'" + l.Step + "'," +
+                                     "'" + l.StepDescription + "'," +
+                                     "true," +
+                                     "'" + l.StepTargetTable + "'," +
+                                     "" + l.StepRowsAffected + "," +
+                                     "$Jobstart," +
+                                     "CURRENT_TIMESTAMP)";
+
+                logger.ExecuteReader();
+                logTransaction.Commit();
+            }
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
                 logTransaction.Rollback();
@@ -109,16 +138,14 @@ namespace personal_cdc_test
             public string Step { get; set; }
             public string StepLabel { get; set; }
             public string StepDescription { get; set; }
-            public bool StepStatus { get; set; }
             public string StepTargetTable { get; set; }
             public int StepRowsAffected { get; set; }
 
-            public LoggingInfo(string step, string stepLabel, string stepDescription, bool stepStatus, string stepTargetTable, int stepRowsAffected)
+            public LoggingInfo(string step, string stepLabel, string stepDescription, string stepTargetTable, int stepRowsAffected)
             {
                 Step = step;
                 StepLabel = stepLabel;
                 StepDescription = stepDescription;
-                StepStatus = stepStatus;
                 StepTargetTable = stepTargetTable;
                 StepRowsAffected = stepRowsAffected;
             }

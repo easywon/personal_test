@@ -18,3 +18,4 @@ personal_cdc_test
     9:38 AM - Starting to outline basic logging process.
     12:00 PM - Managed to create an internal transaction to handle the insertion of new log items.
     2:30 PM - Created both start and end log methods to mark when the database is being accessed and changed.
+    5:00 PM - Restructured the logging table and logging methods to match it.

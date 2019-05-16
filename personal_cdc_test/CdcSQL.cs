@@ -64,9 +64,9 @@ namespace personal_cdc_test
         {
             // Delete sql only requires the primary key for the deletion.
             List<string> columnName = GetColumnName(c, tableName);
-            MessageBox.Show("Yes");
+
             string primaryKey = columnName[0];
-            MessageBox.Show("Yes");
+
             // Update all active ids in HDS that are not present in Landing to soft delete.
             c.CommandText = "UPDATE Hds." + tableName + " " +
                             "SET Delete_Reason = 1, Delete_Datetime = (SELECT $Jobstart) " +

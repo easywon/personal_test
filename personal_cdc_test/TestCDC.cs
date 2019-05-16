@@ -87,6 +87,8 @@ namespace personal_cdc_test
                 cmd.Connection = snowConn;
                 cmd.Transaction = transaction;
 
+                SnowLog.LoggingInfo loginfo = new SnowLog.LoggingInfo("", "", "", "", "", "", 0);
+
                 try
                 {
                     var op = new CdcSQL();
@@ -94,49 +96,18 @@ namespace personal_cdc_test
 
                     op.SetJobstart(cmd);
 
-                    logger.StartLog(snowConn, new SnowLog.LoggingInfo("Step 1",
-                                                                      "Testing",
-                                                                      "Deleting records",
-                                                                      "Customer",
-                                                                      0));
+                    logger.SetLogStart(cmd);
+                    loginfo.StepRowsAffected = op.HdsDelete(cmd, "Customer");
+                    logger.SuccessLog(snowConn, loginfo);
 
-                    records = op.HdsDelete(cmd, "Customer");
+                    logger.SetLogStart(cmd);
+                    loginfo.StepRowsAffected = op.HdsUpdate(cmd, "Customer");
+                    logger.SuccessLog(snowConn, loginfo);
 
-                    logger.EndLog(snowConn, new SnowLog.LoggingInfo("Step 1",
-                                                                    "Testing",
-                                                                    "Deleting records",
-                                                                    "Customer",
-                                                                    records));
+                    logger.SetLogStart(cmd);
+                    loginfo.StepRowsAffected = op.HdsAdd(cmd, "Customer");
+                    logger.SuccessLog(snowConn, loginfo);
 
-                    MessageBox.Show("Delete");
-
-                    logger.StartLog(snowConn, new SnowLog.LoggingInfo("Step 2",
-                                                                      "Testing",
-                                                                      "Updating records",
-                                                                      "Customer",
-                                                                      0));
-
-                    records = op.HdsUpdate(cmd, "Customer");
-
-                    logger.EndLog(snowConn, new SnowLog.LoggingInfo("Step 2",
-                                                                    "Testing",
-                                                                    "Updating records",
-                                                                    "Customer",
-                                                                    records));
-                    MessageBox.Show("Update");
-
-                    logger.StartLog(snowConn, new SnowLog.LoggingInfo("Step 3",
-                                                                      "Testing",
-                                                                      "Adding records",
-                                                                      "Customer",
-                                                                      0));
-                    records = op.HdsAdd(cmd, "Customer");
-
-                    logger.EndLog(snowConn, new SnowLog.LoggingInfo("Step 3",
-                                                                    "Testing",
-                                                                    "Adding records",
-                                                                    "Customer",
-                                                                    records));
                     MessageBox.Show("Add"); 
 
                     op.TruncateLanding(cmd, "Customer");
@@ -195,43 +166,11 @@ namespace personal_cdc_test
 
         private void UpdateHdsButton_Click(object sender, EventArgs e)
         {
-            using (IDbConnection snowConn = new SnowflakeDbConnection())
+            if(DateTime.Now.Hour > 16)
             {
-                // Open the connection
-                snowConn.ConnectionString = new Connection().SnowConnectInfo;
-                snowConn.Open();
-
-                // Declare the command and transactions which will be used throughout the entire batch job.
-                IDbCommand cmd = snowConn.CreateCommand();
-                IDbTransaction transaction;
-
-                // Start the transaction
-                transaction = snowConn.BeginTransaction();
-
-                // Must assign both transaction object and connection
-                // to Command object for a pending local transaction
-                cmd.Connection = snowConn;
-                cmd.Transaction = transaction;
-
-                try
-                {
-                    var op = new CdcSQL();
-
-                    op.SetJobstart(cmd);
-
-
-
-
-                    transaction.Commit();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                    transaction.Rollback();
-                }
-
-                snowConn.Close();
+                MessageBox.Show("After 4pm");
             }
+            MessageBox.Show(DateTime.Now.Date.ToString());
         }
 
         private void AddHDSButton_Click(object sender, EventArgs e)
@@ -254,39 +193,3 @@ namespace personal_cdc_test
         }
     }
 }
-
-/*
- *             // Attemp to establish connection to server
-            IDbConnection conn = new SnowflakeDbConnection();
-            conn.ConnectionString = connectInfo;
-
-            try
-            {
-                string result = "";
-
-                conn.Open();
-                IDbCommand cmd = conn.CreateCommand();
-                cmd.CommandText = "SELECT * FROM Landing.Product;";
-                IDataReader reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        result += reader.GetString(i) + " ";
-                    }
-                    result += "\n";
-                }
-
-                Console.WriteLine(result);
-                MessageBox.Show(result);
-
-                reader.Close();
-                conn.Close();
-                mainMessage.Text = "Test Successful";
-            }
-            catch(SnowflakeDbException sfe)
-            {
-                mainMessage.Text = sfe.ToString();
-            }
-*/

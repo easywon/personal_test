@@ -39,17 +39,20 @@ namespace personal_cdc_test
                     cmd.ExecuteReader();
 
                     cmd.CommandText = "CREATE TABLE IF NOT EXISTS Log.TransactionJobTracking ( " +
-                                        "BatchID TIMESTAMP, " +
+                                        "BatchID Date, " +
                                         "JobDatabase string, " +
-                                        "JobSchema string, " +
                                         "JobName string, " +
+                                        "JobRunStart TIMESTAMP, " +
                                         "Step string, " +
+                                        "StepLabel string, " +
                                         "StepDescription string, " +
-                                        "StepStatus boolean, " +
+                                        "StepTargetSchema string, " +
                                         "StepTargetTable string, " +
                                         "StepRowsAffected int, " +
+                                        "StepStatus string, " +
                                         "StepStartDatetime TIMESTAMP, " +
-                                        "StepEndDatetime TIMESTAMP); ";
+                                        "StepEndDatetime TIMESTAMP, " +
+                                        "StepDuration int); ";
                     cmd.ExecuteReader();
 
                     logTransaction.Commit();
@@ -64,7 +67,7 @@ namespace personal_cdc_test
             }
         }
 
-        public void StartLog(IDbConnection c, LoggingInfo l)
+        public void SuccessLog(IDbConnection c, LoggingInfo l)
         {
             IDbCommand logger = c.CreateCommand();
             IDbTransaction logTransaction = c.BeginTransaction();
@@ -74,19 +77,26 @@ namespace personal_cdc_test
 
             try
             {
+                logger.CommandText = "SET LogEnd = CURRENT_TIMESTAMP;";
+                logger.ExecuteReader();
+                logger.CommandText = "SET TimeDiff = (SELECT DATEDIFF(second, $Logstart, CURRENT_TIMESTAMP));";
+                logger.ExecuteReader();
                 logger.CommandText = "INSERT INTO Log.TransactionJobTracking " +
                                      "Values(" +
+                                     GetBatchDay() +", " +
+                                     "CURRENT_DATABASE(), " +
+                                     "'" + l.JobName + "', " +
                                      "$Jobstart, " +
-                                     "CURRENT_DATABASE()," +
-                                     "CURRENT_SCHEMA()," +
-                                     "'Landing to HDS - CDC'," +
-                                     "'" + l.Step + "'," +
-                                     "'" + l.StepDescription + "'," +
-                                     "false," +
-                                     "'" + l.StepTargetTable + "'," +
-                                     "" + l.StepRowsAffected + "," +
-                                     "$Jobstart," +
-                                     "CURRENT_TIMESTAMP)";
+                                     "'" + l.Step + "', " +
+                                     "'" + l.StepLabel + "', " +
+                                     "'" + l.StepDescription + "', " +
+                                     "'" + l.StepTargetSchema + "', " +
+                                     "'" + l.StepTargetTable + "', " +
+                                     "" + l.StepRowsAffected + ", " +
+                                     "'Success', " +
+                                     "$Logstart, " +
+                                     "$LogEnd," +
+                                     "$TimeDiff);";
 
                 logger.ExecuteReader();
                 logTransaction.Commit();
@@ -98,7 +108,7 @@ namespace personal_cdc_test
             }
         }
 
-        public void EndLog(IDbConnection c, LoggingInfo l)
+        public void FailLog(IDbConnection c, LoggingInfo l)
         {
             IDbCommand logger = c.CreateCommand();
             IDbTransaction logTransaction = c.BeginTransaction();
@@ -110,7 +120,7 @@ namespace personal_cdc_test
             {
                 logger.CommandText = "INSERT INTO Log.TransactionJobTracking " +
                                      "Values(" +
-                                     "$Jobstart, " +
+                                     GetBatchDay() + ", " +
                                      "CURRENT_DATABASE()," +
                                      "CURRENT_SCHEMA()," +
                                      "'Landing to HDS - CDC'," +
@@ -119,7 +129,7 @@ namespace personal_cdc_test
                                      "true," +
                                      "'" + l.StepTargetTable + "'," +
                                      "" + l.StepRowsAffected + "," +
-                                     "$Jobstart," +
+                                     "$Logstart," +
                                      "CURRENT_TIMESTAMP)";
 
                 logger.ExecuteReader();
@@ -132,20 +142,38 @@ namespace personal_cdc_test
             }
         }
 
+        public void SetLogStart(IDbCommand c)
+        {
+            c.CommandText = "SET Logstart = CURRENT_TIMESTAMP;";
+            c.ExecuteReader();
+        }
+        
+        private string GetBatchDay()
+        {
+            if (DateTime.Now.Hour > 16)
+                return "CURRENT_DATE+1";
+            else
+                return "CURRENT_DATE";
+        }
+
         // Internal class to track necessary log information
         public class LoggingInfo
         {
+            public string JobName { get; set; }
             public string Step { get; set; }
             public string StepLabel { get; set; }
             public string StepDescription { get; set; }
+            public string StepTargetSchema { get; set; }
             public string StepTargetTable { get; set; }
             public int StepRowsAffected { get; set; }
 
-            public LoggingInfo(string step, string stepLabel, string stepDescription, string stepTargetTable, int stepRowsAffected)
+            public LoggingInfo(string jobName, string step, string stepLabel, string stepDescription, string stepTargetSchema, string stepTargetTable, int stepRowsAffected)
             {
+                JobName = jobName;
                 Step = step;
                 StepLabel = stepLabel;
                 StepDescription = stepDescription;
+                StepTargetSchema = stepTargetSchema;
                 StepTargetTable = stepTargetTable;
                 StepRowsAffected = stepRowsAffected;
             }

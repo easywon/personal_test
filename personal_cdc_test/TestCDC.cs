@@ -92,11 +92,11 @@ namespace personal_cdc_test
                 try
                 {
                     var op = new CdcSQL();
-                    int records = 0;
 
                     op.SetJobstart(cmd);
 
                     logger.SetLogStart(cmd);
+
                     loginfo.StepRowsAffected = op.HdsDelete(cmd, "Customer");
                     logger.SuccessLog(snowConn, loginfo);
 
@@ -108,7 +108,7 @@ namespace personal_cdc_test
                     loginfo.StepRowsAffected = op.HdsAdd(cmd, "Customer");
                     logger.SuccessLog(snowConn, loginfo);
 
-                    MessageBox.Show("Add"); 
+                    MessageBox.Show("Add");
 
                     op.TruncateLanding(cmd, "Customer");
 
@@ -117,6 +117,8 @@ namespace personal_cdc_test
                 catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message);
+                    loginfo.StepRowsAffected = 0;
+                    logger.FailLog(snowConn, loginfo);
                     transaction.Rollback();
                 }
 

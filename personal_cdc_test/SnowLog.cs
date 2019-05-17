@@ -118,19 +118,26 @@ namespace personal_cdc_test
 
             try
             {
+                logger.CommandText = "SET LogEnd = CURRENT_TIMESTAMP;";
+                logger.ExecuteReader();
+                logger.CommandText = "SET TimeDiff = (SELECT DATEDIFF(second, $Logstart, CURRENT_TIMESTAMP));";
+                logger.ExecuteReader();
                 logger.CommandText = "INSERT INTO Log.TransactionJobTracking " +
                                      "Values(" +
                                      GetBatchDay() + ", " +
-                                     "CURRENT_DATABASE()," +
-                                     "CURRENT_SCHEMA()," +
-                                     "'Landing to HDS - CDC'," +
-                                     "'" + l.Step + "'," +
-                                     "'" + l.StepDescription + "'," +
-                                     "true," +
-                                     "'" + l.StepTargetTable + "'," +
-                                     "" + l.StepRowsAffected + "," +
-                                     "$Logstart," +
-                                     "CURRENT_TIMESTAMP)";
+                                     "CURRENT_DATABASE(), " +
+                                     "'" + l.JobName + "', " +
+                                     "$Jobstart, " +
+                                     "'" + l.Step + "', " +
+                                     "'" + l.StepLabel + "', " +
+                                     "'" + l.StepDescription + "', " +
+                                     "'" + l.StepTargetSchema + "', " +
+                                     "'" + l.StepTargetTable + "', " +
+                                     "" + l.StepRowsAffected + ", " +
+                                     "'Failure', " +
+                                     "$Logstart, " +
+                                     "$LogEnd," +
+                                     "$TimeDiff);";
 
                 logger.ExecuteReader();
                 logTransaction.Commit();
@@ -176,6 +183,17 @@ namespace personal_cdc_test
                 StepTargetSchema = stepTargetSchema;
                 StepTargetTable = stepTargetTable;
                 StepRowsAffected = stepRowsAffected;
+            }
+            
+            public LoggingInfo()
+            {
+                JobName = "";
+                Step = "";
+                StepLabel = "";
+                StepDescription = "";
+                StepTargetSchema = "";
+                StepTargetTable = "";
+                StepRowsAffected = 0;
             }
         }
     }

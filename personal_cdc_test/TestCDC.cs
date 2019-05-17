@@ -96,15 +96,17 @@ namespace personal_cdc_test
                     op.SetJobstart(cmd);
 
                     logger.SetLogStart(cmd);
-
+                    loginfo.Step = "Step 1";
                     loginfo.StepRowsAffected = op.HdsDelete(cmd, "Customer");
                     logger.SuccessLog(snowConn, loginfo);
 
                     logger.SetLogStart(cmd);
+                    loginfo.Step = "Step 2";
                     loginfo.StepRowsAffected = op.HdsUpdate(cmd, "Customer");
                     logger.SuccessLog(snowConn, loginfo);
 
                     logger.SetLogStart(cmd);
+                    loginfo.Step = "Step 3";
                     loginfo.StepRowsAffected = op.HdsAdd(cmd, "Customer");
                     logger.SuccessLog(snowConn, loginfo);
 

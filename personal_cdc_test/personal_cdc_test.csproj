@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CdcFunc.cs" />
     <Compile Include="CdcSQL.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="SnowLog.cs" />
